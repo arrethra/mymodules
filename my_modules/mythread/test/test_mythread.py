@@ -5,15 +5,6 @@ try:
                                           print_warnings = __name__=="__main__")
 except ModuleNotFoundError: pass
 
-## TODO: old import-statement, remove
-##import sys,os,inspect
-##current_folder = os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( inspect.currentframe() ))[0]))
-##parent_folder = os.path.split(current_folder)[0]
-##if parent_folder not in sys.path:
-##    sys.path.insert(0, parent_folder)
-##    
-##del current_folder, parent_folder, sys,os,inspect
-
 import unittest
 import time
 import threading

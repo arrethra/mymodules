@@ -6,16 +6,13 @@ try:
                                          print_warnings = __name__=="__main__")
 except ModuleNotFoundError: pass
 
-## TODO: remove old way of importing
 import sys,inspect,os
-current_folder = os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( inspect.currentframe() ))[0])) 
-parent_folder = os.path.split(current_folder)[0]
-## TODO: remove
-##if parent_folder not in sys.path:
-##    sys.path.insert(0, parent_folder)
-
 import unittest
 import my_modules.myfunctions as myf
+
+current_folder = os.path.realpath(os.path.abspath(os.path.split(
+                                 inspect.getfile( inspect.currentframe() ))[0]))
+parent_folder = os.path.split(current_folder)[0]
 
 
 class TestArgsTakenByFunction(unittest.TestCase):    
