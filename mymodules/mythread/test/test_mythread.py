@@ -1,14 +1,14 @@
 # written by Arrethra https://github.com/arrethra/
 try:
     import importcustommodules
-    importcustommodules.add_parent_folder_to_sys_path(parent=3,
+    importcustommodules.add_parent_folder_to_sys_path(parent=3,  override=True,
                                           print_warnings = __name__=="__main__")
 except ModuleNotFoundError: pass
 
 import unittest
 import time
 import threading
-import my_modules.mythread as myth
+import mymodules.mythread as myth
 
 SECONDS = 0.5
 

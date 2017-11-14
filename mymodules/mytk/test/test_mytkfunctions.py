@@ -1,11 +1,11 @@
 # written by Arrethra https://github.com/arrethra/
 try:
     import importcustommodules
-    importcustommodules.add_parent_folder_to_sys_path(parent=3,
+    importcustommodules.add_parent_folder_to_sys_path(parent=3, override=True,
                                           print_warnings = __name__=="__main__")
 except ModuleNotFoundError: pass
 
-import my_modules.mytk.mytkfunctions as mytkf
+import mymodules.mytk.mytkfunctions as mytkf
 import unittest
 import tkinter as tk
 from tkinter import messagebox as tkm

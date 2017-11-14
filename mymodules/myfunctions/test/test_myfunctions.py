@@ -2,13 +2,13 @@
 
 try:
     import importcustommodules
-    importcustommodules.add_parent_folder_to_sys_path(parent=3,
+    importcustommodules.add_parent_folder_to_sys_path(parent=3, override=True,   
                                          print_warnings = __name__=="__main__")
 except ModuleNotFoundError: pass
 
 import sys,inspect,os
 import unittest
-import my_modules.myfunctions as myf
+import mymodules.myfunctions as myf
 
 current_folder = os.path.realpath(os.path.abspath(os.path.split(
                                  inspect.getfile( inspect.currentframe() ))[0]))
