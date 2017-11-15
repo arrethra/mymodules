@@ -8,7 +8,8 @@ except:
 else:
     imported_prefs = True
     default_values = {"path_to_profile":"[enter default path_to_profile]",  ## https://stackoverflow.com/questions/37358546/python-selenium-how-to-load-the-browsers-datacookies-or-bookmarks
-                      "path_to_adblocker":"[enter_path_to_adblocker]"}
+                      "path_to_adblocker":"[enter_path_to_adblocker]",
+                      "path_to_chromedriver":"?"}
     P = preferences.Preferences(defaults = default_values,
                                 filename="my_selenium - personal paths.txt")
 
@@ -18,6 +19,7 @@ PATH_TO_ADBLOCKER = "specify path to adblocker here, if you cannot import prefer
 
 import threading
 import os, sys, inspect
+import os.path as osp
 from tkinter import messagebox
 import time
 import tkinter as tk
@@ -34,45 +36,51 @@ try:
     from selenium import webdriver
     from selenium.webdriver.chrome.options import Options
     from selenium.webdriver.common.keys import Keys
-except:
+except ModuleNotFoundError:
     A = MakeInvisibleMaster()
-    if "ok" == messagebox.showinfo("selenium not found",
+    messagebox.showinfo("selenium not found",
                     "For this module to run correctly, selenium must be able to be imported.\n"+\
                     "See one of the following websites for information on how to install selenium:\n"+\
                     "http://stackoverflow.com/questions/17540971/how-to-use-selenium-with-python\n"+\
                     "http://www.marinamele.com/selenium-tutorial-web-scraping-with-selenium-and-python\n"+\
                     "(no guarantees implied that it'll work, or that they're thrustworty sites.\n"+\
-                    "use at own risk.)"):
-        A.destroy()
-        quit()
+                    "use at own risk.)")
     A.destroy()
+    quit()
+
 
 download_chromedriver_link = "https://sites.google.com/a/chromium.org/chromedriver/downloads"
 download_adblockers_link   = "http://chrome-extension-downloader.com/"
-    
+
+
+# TODO: change to more suitable style
 current_folder = os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( inspect.currentframe() ))[0]))
 
 
-
-
 # setting default download-directory
-default_download_directory = "[enter default download directory]" # otherwise it'll get stored in the preferences-file, but it'll needs to be initiated the first time
-if imported_prefs:
-    P.set_default_values(default_download_directory = default_download_directory)
-    default_download_directory = P.default_download_directory
-if not os.path.exists(default_download_directory):
-    default_download_directory = False    
-    if imported_prefs:
-        A = MakeInvisibleMaster()
-        if "yes" == messagebox.askquestion(   "Set default Download directory",
-                                              "Please set your default download directory. \n"+\
-                                              "This path will be saved for future times.\n\n"+\
-                                              "Hint: I'll keep asking the next time you start up,\n"+\
-                                              "if you don't set the default directory...."):        
-            P.default_download_directory = filedialog.askdirectory(initialdir=current_folder)
-            default_download_directory = P.default_download_directory
-        A.destroy()
 
+default_download_directory = "[enter default download directory]" # otherwise it'll get stored in the preferences-file, but it'll needs to be initiated the first time
+def ask_for_default_download_directory():
+    global default_download_directory
+    if imported_prefs:
+        P.set_default_values(default_download_directory = default_download_directory)
+        default_download_directory = P.default_download_directory
+    if not os.path.exists(default_download_directory):
+        default_download_directory = False    
+        if imported_prefs:
+            A = MakeInvisibleMaster()
+            if "yes" == messagebox.askquestion(   "Set default Download directory",
+                                                  "Please set your default download directory. \n"+\
+                                                  "This path will be saved for future times.\n\n"+\
+                                                  "Hint: I'll keep asking the next time you start up,\n"+\
+                                                  "if you don't set the default directory...."):
+                folder_answer = filedialog.askdirectory(initialdir=current_folder)
+
+                if osp.exists(folder_answer):
+                    default_download_directory = folder_answer
+                    P.default_download_directory = default_download_directory
+            A.destroy()
+ask_for_default_download_directory()
 
 
 
@@ -101,149 +109,134 @@ def start_Chrome(use_saved_profile = False, adblocker = False):
     with the option to use a saved profile (option not tested, iirc)
     or to use adblockers.
     """
-    try:
-        options = webdriver.ChromeOptions()
+    options = webdriver.ChromeOptions()
 
 
-        if use_saved_profile:
-            path_to_profile = "[Enter default path to profile here]"    
-            if imported_prefs:
-                path_to_profile = P.path_to_profile
-            if not os.path.isabs(path_to_profile):
-                A = MakeInvisibleMaster()
-                if "yes" == messagebox.askquestion("Locate profile",
-                                                   "Do you wish to locate your profile,"+\
-                                                   "\nor do you wish to continue without"+\
-                                                   "\nyour default profile?" +\
-                                                   "" if not imported_prefs else \
-                                                   "\n(You only have to locate this once,"+\
-                                                   "\nthereafter the location will get stored.)"):
-                    path_to_profile = filedialog.askdirectory(initialdir=current_folder)
-                    if imported_prefs and os.path.isabs(P.path_to_profile):
-                        P.path_to_profile = path_to_profile
-                else:
-                    use_saved_profile = False
-                A.destroy()
-            
-
-            
-        if use_saved_profile:
-            options.add_argument("user-data-dir=" + path_to_profile) ## TODO: add "< ... >" ?????? but does it work????
-        else:
-            prefs_dict = {  "net.network_prediction_options":False, #didn't work, iirc
-                            "safebrowsing.enabled":True,
-                            "enable_do_not_track":True, #sends a Do_Not_Track-thingy
-                            "download.prompt_for_download":True,
-                            "download.directory_upgrade": True                                     
-                            }
-            if default_download_directory:
-                temp = { "download.default_directory" : default_download_directory}
-                prefs_dict.update(temp)
-                del temp
-            options.add_experimental_option("prefs",prefs_dict)     
-        if adblocker:
-            try:
-                path_to_adblocker = PATH_TO_ADBLOCKER # if preferences can be imported, that will take over the ride
-                
-                options = add_adblocker_to_profile(options,path_to_adblocker)
-                
-            except Exception as e:
-                print("the following text originates from ",__file__,"\n",e)
-        options.add_argument("start-maximized") #makes sure the screen starts maximalized
-
-
-        def locate_webdriver(options):
-            imported_prefs = False
-            counter = 0
-            while True:
-                
-                try:
-                    import mymodules.preferences as prefs
-                except:
-                    msgbx(imported_prefs)
-                    A = MakeInvisibleMaster()
-                    path_to_webdriver = filedialog.askopenfile().name
-                    A.destroy()
-                else:
-                    imported_prefs = True
-
-                    path_to_webdriver = 0
-                    P = prefs.Preferences(filename = "path_to_Chromedriver.txt")
-                    if counter ==0: # don't wanna be kept in a infite loop
-                        try:
-                            path_to_webdriver = P.path_to_webdriver                    
-                        except:
-                            pass
-                        else:
-                            counter +=1
-                    if not os.path.exists(path_to_webdriver):
-                        msgbx(imported_prefs)
-                        A = MakeInvisibleMaster()
-                        P.path_to_webdriver = filedialog.askopenfile().name
-                        path_to_webdriver = P.path_to_webdriver
-                        A.destroy()
-                    
-                    
-                
-                driver = webdriver.Chrome(executable_path = path_to_webdriver,
-                                              chrome_options=options)
-    
-                
-                return driver
-
-
-        def msgbx(imported_prefs):
-            import sys
-            python_folder = sys.exec_prefix
-            python_scripts_folder = os.path.join(python_folder,"Scripts")
-            
+    if use_saved_profile:
+        path_to_profile = "[Enter default path to profile here]"    
+        if imported_prefs:
+            path_to_profile = P.path_to_profile
+        if not os.path.isabs(path_to_profile):
             A = MakeInvisibleMaster()
-            a = tk.messagebox.askokcancel("Missing: Chromedriver",
-                        "To start up google Chrome with python selenium, \n"+\
-                        "you need to locate the chromedriver.exe . \n\n"+\
-                        "Do you wish to proceed and locate this Chromedriver? \n\n"+\
-                        (("Fortunately, you'll only needs to do this once, as I'll\n"+\
-                        "be able to save that location.\n") if imported_prefs else \
-                        ("Unfortunately, I can't save the location for future times,\n"+\
-                        "so you'll need to locate that file again and again.\n"))+\
-                        "\nIt is recommended to move Chromedriver into the python folder:"+\
-                        "\n"+ python_scripts_folder + \
-                        "\n\nFor further information on Chromedriver, you might like to take a look at \n"+\
-                        download_chromedriver_link + " \n"+\
-                        "(no garuantess about thrustworthiness and so forth)\n"+\
-                        "or use FireFox or IE .")
-            if not a:
-                A.destroy()
-                quit()
+            if "yes" == messagebox.askquestion("Locate profile",
+                                               "Do you wish to locate your profile,"+\
+                                               "\nor do you wish to continue without"+\
+                                               "\nyour default profile?" +\
+                                               "" if not imported_prefs else \
+                                               "\n(You only have to locate this once,"+\
+                                               "\nthereafter the location will get stored.)"):
+                path_to_profile = filedialog.askdirectory(initialdir=current_folder)
+                if imported_prefs and os.path.isabs(P.path_to_profile):
+                    P.path_to_profile = path_to_profile
             else:
-                A.destroy()
-
-        try:
-            driver = webdriver.Chrome(chrome_options=options)            
-        except Exception as e:
-            driver = locate_webdriver(options)
-            
-            
+                use_saved_profile = False
+            A.destroy()
         
-        # if an adblocker is installed, this loads up an extra "first run" page, which I'd like to close
-        time.sleep(0.5)
-        if len(driver.window_handles) > 1:
-            driver.switch_to_window( driver.window_handles[-1])
-            driver.close()
-            driver.switch_to_window( driver.window_handles[0])
 
-    except:
-        try: driver
-        except: raise
-        import traceback
-        traceback.print_exc()
+        
+    if use_saved_profile:
+        options.add_argument("user-data-dir=" + path_to_profile) ## TODO: does it work????
+    else:
+        prefs_dict = {  "net.network_prediction_options":False, #didn't work, iirc
+                        "safebrowsing.enabled":True,
+                        "enable_do_not_track":True, #sends a Do_Not_Track-thingy
+                        "download.prompt_for_download":True,
+                        "download.directory_upgrade": True                                     
+                        }
+        if default_download_directory:
+            temp = { "download.default_directory" : default_download_directory}
+            prefs_dict.update(temp)
+            del temp
+        options.add_experimental_option("prefs",prefs_dict)     
+    if adblocker:
+        path_to_adblocker = PATH_TO_ADBLOCKER # if preferences can be imported, that will take over the ride
+        
+        options = add_adblocker_to_profile(options,path_to_adblocker)
+
+    options.add_argument("start-maximized") #makes sure the screen starts maximalized
+
+
+    def locate_webdriver(options):
+        if imported_prefs and osp.exists(P.path_to_chromedriver):
+            path_to_webdriver = P.path_to_chromedriver
+        else:  
+            msgbx(imported_prefs)
+            A = MakeInvisibleMaster()
+            opening_file = filedialog.askopenfile()
+            if opening_file == None:
+                return locate_webdriver(options)
+            path_to_webdriver = opening_file.name 
+            A.destroy()
+            if not osp.exists(path_to_webdriver):
+                return locate_webdriver(options)
+            if imported_prefs:
+                P.path_to_chromedriver = path_to_webdriver
+        try:
+            driver = webdriver.Chrome(executable_path = path_to_webdriver,
+                                      chrome_options=options)
+        except OSError:
+            print("Some error went down with Chrome-driver, probably not found. "+\
+                  "The path to chromedriver was '%s'."%path_to_webdriver)
+            raise
+
+        return driver
+
+
+    def msgbx(imported_prefs):
+        import sys
+        python_folder = sys.exec_prefix
+        python_scripts_folder = os.path.join(python_folder,"Scripts")
+        
+        A = MakeInvisibleMaster()
+        a = tk.messagebox.askokcancel("Missing: Chromedriver",
+                    "To start up google Chrome with python selenium, \n"+\
+                    "you need to locate the chromedriver.exe . \n\n"+\
+                    "Do you wish to proceed and locate this Chromedriver? \n\n"+\
+                    (("Fortunately, you'll only needs to do this once, as I'll\n"+\
+                    "be able to save that location.\n") if imported_prefs else \
+                    ("Unfortunately, I can't save the location for future times,\n"+\
+                    "so you'll need to locate that file again and again.\n"))+\
+                    "\nIt is recommended to move Chromedriver into the python folder:"+\
+                    "\n"+ python_scripts_folder + \
+                    "\n\nFor further information on Chromedriver, you might like to take a look at \n"+\
+                    download_chromedriver_link + " \n"+\
+                    "(no garuantess about thrustworthiness and so forth)\n"+\
+                    "or use FireFox or IE .")
+        if not a:
+            A.destroy()
+            quit()
+        else:
+            A.destroy()
+
+    chromedriver_is_easily_found = True
+    try:
+        driver = webdriver.Chrome(chrome_options=options)            
+    except Exception as e:
+        e = str(e)
+        if not "Message: 'chromedriver' executable needs to be in PATH.".lower() in e.lower():
+            raise
+        chromedriver_is_easily_found = False
+        
+    if not chromedriver_is_easily_found:
+        driver = locate_webdriver(options)
+    
+        
+        
+    
+    # if an adblocker is installed, this loads up an extra "first run" page, which I'd like to close
+    time.sleep(0.5)
+    if len(driver.window_handles) > 1:
+        driver.switch_to_window( driver.window_handles[-1])
+        driver.close()
+        driver.switch_to_window( driver.window_handles[0])
+
+    
     return driver
 
 
 
 
-def add_adblocker_to_profile(profile_options, path_to_adblocker="no path"):
-    import os.path as osp
+def add_adblocker_to_profile(profile_options, path_to_adblocker="no path"):    
 
     add_blocker_ask_question = ("Specify location of adblockers",
                                  ("Please specify the directory where the files "+
@@ -261,35 +254,25 @@ def add_adblocker_to_profile(profile_options, path_to_adblocker="no path"):
 
     if imported_prefs:
         path_to_adblocker = P.path_to_adblocker
-        if not osp.exists(path_to_adblocker):
-            
-            A = MakeInvisibleMaster()
-            A_answer = askyesnodownload(*add_blocker_ask_question)
-            A.destroy()
-            if A_answer == "Yes, download":
-                threading.Thread(target = lambda*x:(time.sleep(1),update_adblockers()) ).start()                
-            if A_answer == "Yes" or A_answer == "Yes, download" :        
-                P.path_to_adblocker = filedialog.askdirectory(initialdir=current_folder)
-                path_to_adblocker = P.path_to_adblocker
-            else:
-                return profile_options
-            
-   
     if not osp.exists(path_to_adblocker):
+        
         A = MakeInvisibleMaster()
-        answer = messagebox.askyesno("Specify location of adblocker",
-                                     "Either no path has been specified,\n"+\
-                                     "or the input path led to a faulty location.\n"+\
-                                     "The faulty path that was specified was \n'%s'."\
-                                     %path_to_adblocker + "\nDo you wish to download adblockers and/or specify correct folder")
+        A_answer = askyesnodownload(*add_blocker_ask_question)
         A.destroy()
-        if answer == "no":       
-            return profile_options
-        if answer == "yes":
-            if imported_prefs:
-                return add_adblocker_to_profile(profile_options, path_to_adblocker="no path")
-            else:
-                path_to_adblocker = filedialog.askdirectory(initialdir=current_folder)
+        if A_answer == "Yes, download":
+            threading.Thread(target = lambda*x:(time.sleep(1),update_adblockers()) ).start()                
+        if A_answer == "Yes" or A_answer == "Yes, download" :
+            A = MakeInvisibleMaster()
+            path_to_adblocker = filedialog.askdirectory(initialdir=current_folder)
+            A.destroy()
+            if path_to_adblocker != "" and imported_prefs:
+                P.path_to_adblocker = path_to_adblocker
+        elif A_answer.lower() == "no":
+            return profile_options        
+
+    if not osp.exists(path_to_adblocker):
+        return add_adblocker_to_profile(profile_options, path_to_adblocker="no path")
+            
                 
     filenames = [a.lower() for a in os.listdir(path_to_adblocker)  if osp.isfile(osp.join(path_to_adblocker, a)) and a.endswith(".crx")]
     for specific_name in ["adblock-plus","adblock"]:  
@@ -470,9 +453,9 @@ import threading
    
     
 
-_CheckIfDriverHasClosed_counter = 0
+_CloseDriverAfterBrowserHasClosed_counter = 0
 
-class CheckIfDriverHasClosed:
+class CloseDriverAfterBrowserHasClosed:
     """
     Starts a loop in which is checked if the browser has closed. 
     If the browser is closed, it will exit that driver entirely, by 
@@ -485,22 +468,28 @@ class CheckIfDriverHasClosed:
 
     Arguments:
     driver:   The driver that drives the browser. For now, it only
-              supports Chrome.
+              supports Chrome. (Although you could supply your own
+              method is_browser_open )
     lock:     Selenenium is not thread safe. Therefor, the option is 
-              given to specify a lock. Not needed if thread is 
+              given to specify a lock/semaphore. Not needed if thread is 
               specified False.
     thread:   Option to start the loop in a thread. Default is False.
+              Note that selenium is not thread-safe and thus care has to
+              be taken with this option. If you are planning to use
+              selenium after this class has been called, either locks
+              have to be used, or some other precautions (such as
+              inheriting this class, and then disable the method
+              is_browser_open during your usage of selenium.
     freq:     The frequency in Hertz at which the loop will check on the
               status of the browser. Default is 1 Hz.
     start_loop:
-              If True (default), the loop is started instantly. 
+              If True (default), the loop is started instantly.
               If False, the loop needs to be initiated via the method
-              'start'.       
+              'start'.
     All arguments (except start_loop) are accessible at attributes
     of the same name.
     """
-## 456789112345678921234567893123456789412345678951234567896123456789712
-    def __init__(self, driver, 
+    def __init__(self, driver,
                        lock = None,
                        thread = False,
                        freq = 1,
@@ -536,11 +525,11 @@ class CheckIfDriverHasClosed:
             
         if thread:
             ## TODO: replace counter with counter_function if possible
-            global _CheckIfDriverHasClosed_counter
-            thread_name = "CheckIfDriverHasClosed [%s]"%_CheckIfDriverHasClosed_counter
-            _CheckIfDriverHasClosed_counter += 1
+            global _CloseDriverAfterBrowserHasClosed_counter
+            thread_name = "CloseDriverAfterBrowserHasClosed [%s]"%_CloseDriverAfterBrowserHasClosed_counter
+            _CloseDriverAfterBrowserHasClosed_counter += 1
 
-             T =  threading.Thread(target = self._start, name = thread_name)
+            T =  threading.Thread(target = self._start, name = thread_name)
 	    
             T.start()
         else:
@@ -702,7 +691,7 @@ if __name__ == "__main__":
     driver.switch_to_window(open_new_tab(driver))
     close_window(driver)
 
-    A = CheckIfDriverHasClosed(driver)
+    A = CloseDriverAfterBrowserHasClosed(driver)
     print("Browser exited")
    
 
