@@ -1,8 +1,5 @@
 # written by arrethra https://github.com/arrethra
 
-# well, not very functional module, and probably better written by using
-# threading.locks/semaphores but fun to write
-
 import functools
 
 def timelockwrapper(master,
@@ -109,8 +106,7 @@ def timelock(  master,
         locker_copy = _LOCKER_DICT[locker_key]
         _LOCKER_DICT[locker_key] = 0
         # catches any event during the time that it was still locked
-        if locker_copy>1
-##            func(*func_args,**func_kwargs)
+        if locker_copy>1:
             timelock(**original_args_of_this_function)
 
     func(*func_args,**func_kwargs)

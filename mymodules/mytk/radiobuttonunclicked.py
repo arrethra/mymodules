@@ -134,11 +134,12 @@ if __name__ == "__main__":
     R.var.set(0)
     R.var.trace('w',foo)
 
+
     nr_of_buttons = 5
     for i in range(1,nr_of_buttons+1):
         setattr(R,"R"+str(i), RadiobuttonUnclicked(root,text=str(i),variable=R.var, value = i)  )
         getattr(R,"R"+str(i)).pack()
-    
+
     root.mainloop()
 
         

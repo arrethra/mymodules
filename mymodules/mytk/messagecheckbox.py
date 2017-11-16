@@ -1137,7 +1137,7 @@ class MessageCheckBox(MessageBox):
             error_message = "argument 'checkbutton_var' should be of type(s)"+\
                             "%s but found type %s"\
                             %(ALLOWED_TYPES, type(checkbutton_var))
-            raise TypeError(error_message)
+            return TypeError(error_message)
 
 
 
@@ -1317,7 +1317,7 @@ def quityesnocheck(master = DEFAULT.master,
     Pops up a challenge box, whether the user really wishes to exit the
     program or not. The challenge box also has a checkbox, in which
     users can specify they no longer wish to see the challenge box.
-    (Although this last part is to be constructed manually, see below)
+    (Although this last part has to be constructed manually, see below)
 
     Returns a tuple with the answer and whether the checkbutton was
     checked or not (boolean). Example:  ("yes", True)
@@ -1358,7 +1358,7 @@ def quityesnocheck(master = DEFAULT.master,
         function = master.destroy
     else:
         if not callable(function):
-            error_message = "Argument function was not callable."
+            error_message = "Argument function was not callable, but of type '%s'."%type(function)
             raise TypeError(error_message)        
     
     message = " Do you wish to close the program?" 
@@ -1380,10 +1380,10 @@ def quityesnocheck(master = DEFAULT.master,
         
 
 if __name__ == "__main__":
+    #TODO: write this into a test-case......
 
-
-    
-    A = ShowMessageCheckBox(message = "with timer",strings=("OK","Cancel"),timer=5)
+    A = ShowMessageCheckBox(message = "The timer will quit this messsage by itself.",
+                            strings=("OK","Cancel"),timer=5)
     
     B = quityesnocheck(function=lambda*x:print("exited")) 
     

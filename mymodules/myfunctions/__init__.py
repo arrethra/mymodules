@@ -132,15 +132,19 @@ def isIDLE():
     Does not always work for version 2.X, see link below
     https://stackoverflow.com/questions/3431498/what-code-can-i-use-to-check-if-python-is-running-in-idle
     """
+    # TODO: make it work for (all) v2.x, see link above
     return "idlelib" in sys.modules
 
 
 def get_location(folders_up = 0):
     """
-    Returns the location where this function is called.
+    Returns the folder location where this function is called.
     If folders_up is specified, it will remove the last few folders.
     """
     # does this function mirror another stdlib-function...?
+    # this function is also mirrored in the module importcustommodules,
+    # though named 'get_parent_folder' or 'get_parent_folder_stack'
+    # (the latter can go deepeer into the stack)
     if not isinstance(folders_up,int):
         error_message = "argument 'folders_up' must be integer, but found type '%s'."%type(folders_up)
         raise TypeError(error_message)

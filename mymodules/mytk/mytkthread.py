@@ -13,6 +13,20 @@ def _initialize_FUNCTIONS_DICT(master):
     except KeyError:
         _FUNCTIONS_DICT[master] = []
 
+def _assert_args_kwargs(args,kwargs):
+    if not isinstance(args,tuple):
+        error_message = "Argument 'args' should be a tuple, but instead found type %s."%type(function)
+        return TypeError(error_message)
+
+    if not isinstance(kwargs,dict):
+        error_message = "Argument 'kwargs' should be a dictionary, but instead found type %s."%type(function)
+        return TypeError(error_message)
+    else:
+        for kwarg_key in kwargs.keys():
+            if not isinstance(kwarg_key,str):
+                error_message = "Argument 'kwargs' was to be a dictionary, but not all keys were of type string, as one of them was of type '%s'."%type(kwarg_key)
+                return ValueError(error_message)
+    
     
 def list_function_for_execution(master,
                                 function, args=None, kwargs=None,
@@ -54,21 +68,15 @@ def list_function_for_execution(master,
 
     if args == None:
         args = ()
-    elif not isinstance(args,tuple):
-        error_message = "Argument 'args' should be a tuple, but instead found type %s."%type(function)
-        raise TypeError(error_message)
-
     if kwargs == None:
-        kwargs = {}
-    elif not isinstance(kwargs,dict):
-        error_message = "Argument 'kwargs' should be a dictionary, but instead found type %s."%type(function)
-        raise TypeError(error_message)
+        kwargs = {}    
+    if _assert_args_kwargs(args,kwargs):
+        raise _assert_args_kwargs(args,kwargs)
 
     if snapshot:
         args = copy.deepcopy(args)
         kwargs = copy.deepcopy(kwargs)
         
-
     if not callable(function):
         error_message = "Argument 'function' should be callable, but instead found type %s."%type(function)
         raise TypeError(error_message)
@@ -89,8 +97,6 @@ def list_function_for_execution(master,
             return sleeper_cell_decorator
         
         function = sleeper_cell_wrapper(sleeper_cell)(function)
-        
-    # TODO: check how many argument it has...
 
     _FUNCTIONS_DICT[master].append((function,args,kwargs))
 
