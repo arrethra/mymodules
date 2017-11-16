@@ -69,18 +69,7 @@ class Testmythread(unittest.TestCase):
             def bar():
                 pass
 
-    def test_timelockwrapper(self):
-        self.FOO = 0
-        
-        @myth.timelockwrapper(SECONDS)
-        def foo():
-            self.FOO += 1
 
-        foo()
-        foo()
-        self.assertTrue(self.FOO == 1)
-        time.sleep(SECONDS*1.1)
-        self.assertTrue(self.FOO == 2)
 
 
 if __name__ == "__main__":
