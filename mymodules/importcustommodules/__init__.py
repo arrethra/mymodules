@@ -5,11 +5,14 @@ Any modules causing a potential conflict with other (installed) modules
 are collected in variable 'CONFLICT_MODULES'.
 """
 CONFLICT_MODULES = []
+ALL_ADDED_FOLDERS = []
 
 import os, sys, inspect
 import functools
 
 version = [sys.version_info[i] for i in range(3)]
+
+
 
 def capture_printed_text(func,*args,**kwargs):
     """
@@ -54,7 +57,6 @@ def capture_printed_text(func,*args,**kwargs):
         return "\n".join(output)
   
         
-
     if version >= [3,4]:
         return capture_printed_text_v3_4(func,*args,**kwargs)
     else:
@@ -66,6 +68,8 @@ def capture_printed_text(func,*args,**kwargs):
 def get_all_installed_modules():
     """
     Gets all installed modules, and returns them in a list.
+    # TODO: Change this function that it not uses stdout anymore,
+            because it can cause stupid unexpected errors
     """
     out = capture_printed_text(help,'modules')
     out = out[71:-137]
@@ -90,7 +94,7 @@ except FileNotFoundError:
     pass 
 
 
-def add_folder_to_sys_path(folders, print_warnings=True, override = False):
+def add_folder_to_sys_path(folders, print_warnings=False, override = False):
     """
     Adds a folder to sys.path. This enables modules to be imported
     from that specific folder. These 'new modules' can be imported
@@ -116,6 +120,7 @@ def add_folder_to_sys_path(folders, print_warnings=True, override = False):
     override:         Whether the 'imported modules' will override any
                       existing modules or not. 
     """
+    global ALL_ADDED_FOLDERS
     if isinstance(folders, (str,bytes)):
         folders = [folders]
         
@@ -126,6 +131,8 @@ def add_folder_to_sys_path(folders, print_warnings=True, override = False):
     if print_warnings:    
         _original_modules_list = get_all_installed_modules()
         double_modules = []
+
+
         
     # is executed when module is called,
     # i.e. adds the module_paths to sys_path
@@ -139,6 +146,10 @@ def add_folder_to_sys_path(folders, print_warnings=True, override = False):
                 sys.path.insert(1, target_folder)                
             else:
                 sys.path.append(target_folder)
+
+
+
+            ALL_ADDED_FOLDERS.append(target_folder)
             
             if print_warnings: 
                 
@@ -264,9 +275,9 @@ def add_parent_folder_to_sys_path(parent, print_warnings=True, override = False)
     if _assert_parent(parent):
         raise _assert_parent(parent)
 
-    parent_folder = get_parent_folder_stack(parent, stack=2)   
+    parent_folder = get_parent_folder_stack(parent, stack=2)
  
-    add_folder_to_sys_path(parent_folder, print_warnings=True, override = False)
+    add_folder_to_sys_path(parent_folder, print_warnings=print_warnings, override=override)
 
 
 if __name__ == "__main__":    

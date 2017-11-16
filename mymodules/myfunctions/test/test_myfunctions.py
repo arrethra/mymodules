@@ -3,7 +3,7 @@
 try:
     import importcustommodules
     importcustommodules.add_parent_folder_to_sys_path(parent=3, override=True,   
-                                         print_warnings = __name__=="__main__")
+                                         print_warnings = False)
 except ModuleNotFoundError: pass
 
 import sys,inspect,os
