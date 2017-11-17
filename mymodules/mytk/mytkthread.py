@@ -5,6 +5,7 @@ import functools
 import copy
 
 
+
 _FUNCTIONS_DICT = {}
 def _initialize_FUNCTIONS_DICT(master):
     global _FUNCTIONS_DICT
@@ -63,7 +64,7 @@ def list_function_for_execution(master,
                   If specified True, the current thread will wait untill
                   that listed function has been executed.
     """
-    global _FUNCTIONS_DICT   
+    global _FUNCTIONS_DICT
     _initialize_FUNCTIONS_DICT(master)
 
     if args == None:
@@ -114,7 +115,7 @@ def execute_functions(master,timer = 0.05):
     timer is delay in second, and determines how often is checked
     whether there are any functions to be executed.
 
-    Note: If a function executed by the master 'freezess the master,
+    Note: If a function executed by the master 'freezes the master,
           this function will be frozen likewise (TODO: yes, rly?)
     """
     global _FUNCTIONS_DICT    
@@ -126,7 +127,9 @@ def execute_functions(master,timer = 0.05):
     elif  timer <0.001:
         error_message = "Argument timer must be 0.001 or greater, but found value '%s'."%timer
         raise ValueError(error_message)
-    
+
+
+
     def execute_functions_loop():
         if len(_FUNCTIONS_DICT[master]) != 0:
             func, args, kwargs = _FUNCTIONS_DICT[master][0] 
@@ -136,7 +139,14 @@ def execute_functions(master,timer = 0.05):
             
             execute_functions_loop() # check if there are more functions listed to be executed
         else:
-            master.after(int(timer*1000), execute_functions_loop)
+            try: # TODO: replace with mytkf.is_root_alive(root)
+                if master.state():
+                    master.after(int(timer*1000), execute_functions_loop)
+            except Exception as e:
+                e = str(e).lower()
+                if not e.endswith('application has been destroyed'):
+                    print(">",e,"<")
+                    raise
     
     execute_functions_loop()
 
@@ -146,5 +156,5 @@ def execute_functions(master,timer = 0.05):
 if __name__ == "__main__":
     import unittest
     from test.test_mytkthread import *
-    unittest.main()        
+    unittest.main()     
                 

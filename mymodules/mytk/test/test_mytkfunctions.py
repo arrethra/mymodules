@@ -43,6 +43,16 @@ class TestMyTKFunctions(unittest.TestCase):
                          "PS, a tk-window should be visible")
         self.assertTrue(mytkf.is_root_present())
 
+    def test_is_root_alive(self):
+        self.master =  mytkf.MakeInvisibleMaster()
+        self.assertTrue( mytkf.is_root_alive(self.master) )
+        self.masterTOP = tk.Toplevel(self.master)
+        self.assertTrue( mytkf.is_root_alive(self.masterTOP) )
+        self.masterTOP.destroy()
+        self.assertFalse( mytkf.is_root_alive(self.masterTOP) )
+        self.master.destroy()
+        self.assertFalse( mytkf.is_root_alive(self.master) )
+
 
         
     def setUp(self):
@@ -55,6 +65,7 @@ class TestMyTKFunctions(unittest.TestCase):
             except: pass
             finally:
                 delattr(self,'master')
+    
                 
 
 if __name__ == "__main__":

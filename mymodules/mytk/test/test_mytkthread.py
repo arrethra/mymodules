@@ -56,6 +56,7 @@ class TestMyTKthread(unittest.TestCase):
             mytkth.list_function_for_execution(self.master, bar, kwargs={"z":'a'})
             time.sleep(seconds)
 
+
             # real reason this module was written:
             # .destroy can only be called from it's own thread and not from this thread
             mytkth.list_function_for_execution(self.master, self.master.destroy)
@@ -100,8 +101,11 @@ class TestMyTKthread(unittest.TestCase):
 
             elapsed_time = time.time() - start_time
             self.assertTrue(abs(elapsed_time - SECONDS)< (ERROR+TIMER))
-            
-            mytkth.list_function_for_execution(self.master, self.master.destroy)
+
+            def cancel_and_destroy():
+                self.master.after_cancel( self.master_id_to_cancel )
+                self.master.destroy()
+            mytkth.list_function_for_execution(self.master, cancel_and_destroy)
 
         
         self.master = mytkf.MakeInvisibleMaster()
@@ -113,7 +117,7 @@ class TestMyTKthread(unittest.TestCase):
         T.daemon = True
         T.start()
 
-        self.master.after(int((SECONDS+TIMER)*2000),self.master.destroy) # insurance that test is not halted...
+        self.master_id_to_cancel = self.master.after(int((SECONDS+TIMER)*2000),self.master.destroy) # insurance that test is not halted...
         self.master.mainloop()
 
         

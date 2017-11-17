@@ -37,6 +37,25 @@ def is_root_present():
             
     return output
 
+def is_root_alive(root):
+    """
+    Checks if root is alive, and returns it's state.
+    If destroyed, it returns False.
+    """
+    try:
+        answer = root.state()            
+    except Exception as e:
+        # I guess all exceptions mean that the window is not live..
+        return False 
+##        e = str(e).lower()        
+##        if e.endswith('application has been destroyed'):
+##            return False
+##        else:
+##            raise        
+    else:
+        return answer
+        
+
 
 class MakeInvisibleMaster(tk.Tk):
     """
@@ -75,4 +94,4 @@ def InvisibleMasterWrapper(func):
 if __name__ == "__main__":
     import unittest
     from test.test_mytkfunctions import *
-    unittest.main()           
+    unittest.main()
