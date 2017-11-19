@@ -8,6 +8,7 @@ except ModuleNotFoundError: pass
 
 import sys,inspect,os
 import unittest
+import math
 import mymodules.myfunctions as myf
 
 current_folder = os.path.realpath(os.path.abspath(os.path.split(
@@ -94,6 +95,9 @@ class TestIsIterable(unittest.TestCase):
 
 class TestCounterFunction(unittest.TestCase):
 
+    def setUp(self):        
+        self.tearDown()
+
     def assert_default_function(self,*args,**kwargs):
         self.assertTrue(myf.counter_function(*args,**kwargs) == 1)
         for n in range(10):
@@ -105,19 +109,17 @@ class TestCounterFunction(unittest.TestCase):
            self.assertTrue(myf.counter_function(**kwargs) == n+1+x)
 
     def assert_step(self,x,**kwargs):
-        import math
-        
         myf.counter_function(reset=True,**kwargs)
         
-        for n in range(10):        
-           self.assertTrue( math.isclose(myf.counter_function(step=x,**kwargs) , (n+1)*x,abs_tol=1e-5))
+        for n in range(10):
+            # this deals with floats as well, so thats why math.isclose
+            self.assertTrue( math.isclose(myf.counter_function(step=x,**kwargs) , (n+1)*x,abs_tol=1e-5))
     
     def test_default_function(self):
         self.assert_default_function()
            
-    def test_default_reset(self):
-        #check if reset works (resetted through tearDown)
-        self.assert_default_function()
+    def test_default_reset(self):        
+        self.assert_default_function() #check if reset works (resetted through tearDown)
 
     def test_elem(self):
         self.assert_default_function(elem=1)
@@ -132,7 +134,28 @@ class TestCounterFunction(unittest.TestCase):
         self.assert_step(2.1)
         self.assert_step(-1)
 
+    def test_step_as_function(self):
+        def foo(x):
+            return x*x
+        self.assertTrue( myf.counter_function(step=2) == 2 )
+        self.assertTrue( myf.counter_function(step=foo) == 4 )        
+        self.assertTrue( myf.counter_function(step=foo) == 16 )
 
+    def test_step_as_function_errors(self):
+        def foo_not_enough_arguments():
+            pass        
+        with self.assertRaises(ValueError):
+            myf.counter_function(step = foo_not_enough_arguments)
+            
+        def foo_too_much_arguments(x,y):
+            pass
+        with self.assertRaises(ValueError):
+            myf.counter_function(step = foo_too_much_arguments)
+
+        def foo_wrong_output(x):
+            return str(x)
+        with self.assertRaises(TypeError):
+            myf.counter_function(step = foo_wrong_output)   
 
     def tearDown(self):
         myf.counter_function(reset=True)

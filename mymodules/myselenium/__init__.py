@@ -2,7 +2,7 @@
 
 try:
     import mymodules.preferences as preferences # < https://github.com/arrethra/preferences >
-except:
+except ModuleNotFoundError:
     # this script is supposed to work without preferences, although that one isn't fully tested...
     imported_prefs = False 
 else:
