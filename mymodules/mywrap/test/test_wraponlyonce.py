@@ -6,9 +6,9 @@ try:
 except ModuleNotFoundError: pass
 
 import unittest
-import mymodules.mywrap.onlywraponce as owo
+import mymodules.mywrap.wraponlyonce as woo
 import functools
-import mymodules.mywrap.test.test_onlywraponce_support as towos
+import mymodules.mywrap.test.test_wraponlyonce_support as twoos
 
 CONTROL_LIST = []
 def add_to_control_list(item):
@@ -20,7 +20,7 @@ def reset_control_list():
     
 def wrapper_factory(item,wrapper_name='wrapper'):
     def wrapper(func):
-        @owo.onlywraponce(func,wrapper if wrapper_name=='wrapper' else wrapper_name)
+        @woo.wraponlyonce(func,wrapper if wrapper_name=='wrapper' else wrapper_name)
         @functools.wraps(func)
         def call(*args,**kwargs):
             add_to_control_list(item)            
@@ -31,7 +31,7 @@ def wrapper_factory(item,wrapper_name='wrapper'):
     return wrapper
 
 def wrapper(func):
-    @owo.onlywraponce(func,wrapper)
+    @woo.wraponlyonce(func,wrapper)
     @functools.wraps(func)
     def call(*args,**kwargs):
         add_to_control_list("wrapper")            
@@ -42,11 +42,11 @@ def wrapper(func):
 
 
 
-class Test_onlywraponce(unittest.TestCase):
+class Test_wraponlyonce(unittest.TestCase):
     def setUp(self):
         self.assertTrue(CONTROL_LIST==[])
     
-    def test_owo(self):
+    def test_woo(self):
         @wrapper_factory("a")
         @wrapper_factory("a")
         def foo():
@@ -54,7 +54,7 @@ class Test_onlywraponce(unittest.TestCase):
         foo()
         self.assertTrue(CONTROL_LIST == ["a","a"])
 
-    def test_owo_factory1(self):
+    def test_woo_factory1(self):
         # these wrappers will not hinder eachother
         @wrapper_factory("a","a")
         @wrapper_factory("b","b")
@@ -63,7 +63,7 @@ class Test_onlywraponce(unittest.TestCase):
         foo()
         self.assertTrue(CONTROL_LIST == ["a","b","b","a"])
 
-    def test_owo_factory2(self):
+    def test_woo_factory2(self):
         # these wrappers WILL hinder eachother
         @wrapper_factory("a","a")
         @wrapper_factory("b","a")
@@ -72,7 +72,7 @@ class Test_onlywraponce(unittest.TestCase):
         foo()
         self.assertTrue(CONTROL_LIST == ["a","a"])
         
-    def test_owo_nested1(self):
+    def test_woo_nested1(self):
         # these are wraps nested, and do cancel eachother
         @wrapper_factory("a")
         def foo():
@@ -85,7 +85,7 @@ class Test_onlywraponce(unittest.TestCase):
         foo()
         self.assertTrue(CONTROL_LIST == ["a","foo","bar","foo","a"])
         
-    def test_owo_nested1(self):
+    def test_woo_nested1(self):
         # these are wraps nested, and do cancel eachother
         @wrapper_factory("a","a")
         def foo():
@@ -98,7 +98,7 @@ class Test_onlywraponce(unittest.TestCase):
         foo()
         self.assertTrue(CONTROL_LIST == ["a","foo","b","bar","b","foo","a"])
 
-    def test_owo_wrappers_with_same_name(self):
+    def test_woo_wrappers_with_same_name(self):
         # wrappers (after creation) have same function-name. However, because 
         @wrapper_factory("a")
         @wrapper
@@ -108,15 +108,15 @@ class Test_onlywraponce(unittest.TestCase):
         self.assertTrue(CONTROL_LIST == ["a","wrapper","wrapper","a"])
 
 
-    def test_owo_from_another_module(self):
+    def test_woo_from_another_module(self):
         # test if working from between modules still works
-        myfoo = towos.foo
+        myfoo = twoos.foo
         def foo():
             pass
-        mywrappedfoo = towos.wrapper_factory_support("b")(myfoo)
+        mywrappedfoo = twoos.wrapper_factory_support("b")(myfoo)
         mywrappedfoo()
-        self.assertTrue(towos.CONTROL_LIST == ["b","b"])
-        towos.reset_control_list()
+        self.assertTrue(twoos.CONTROL_LIST == ["b","b"])
+        twoos.reset_control_list()
 
     # TODO: test for thread-safety?? (how??)
 
@@ -135,8 +135,8 @@ class Test_onlywraponce(unittest.TestCase):
         hash1 = []
         hash2 = []
         for test_function in list_test_functions:            
-            hash1.append( owo.get_unique_hash_of_function(test_function) )
-            hash2.append( owo.get_unique_hash_of_function(test_function) )
+            hash1.append( woo.get_unique_hash_of_function(test_function) )
+            hash2.append( woo.get_unique_hash_of_function(test_function) )
             self.assertTrue( hash1 == hash2 )
         self.assertTrue(hash1[-2] == hash1[-1]) # methods are the same, regardless whether the class is initiated or not
         

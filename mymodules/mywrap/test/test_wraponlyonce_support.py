@@ -1,6 +1,6 @@
 # written by Arrethra https://github.com/arrethra/
 
-# support for module test_onlywraponce
+# support for module test_wraponlyonce
 
 try:
     import importcustommodules
@@ -8,11 +8,11 @@ try:
                                                       print_warnings=False)
 except ModuleNotFoundError: pass
 
-import mymodules.mywrap.onlywraponce as owo
+import mymodules.mywrap.wraponlyonce as woo
 import functools
 
 
-# blatant copies from test_onlywraponce :P
+# blatant copies from test_wraponlyonce :P
 # but I wanted to see what happens if they're moved outside of the running module
 CONTROL_LIST = []
 def add_to_control_list(item):
@@ -24,7 +24,7 @@ def reset_control_list():
 
 def wrapper_factory_support(item,wrapper_name='wrapper'):
     def wrapper(func):
-        @owo.onlywraponce(func,wrapper if wrapper_name=='wrapper' else wrapper_name)
+        @woo.wraponlyonce(func,wrapper if wrapper_name=='wrapper' else wrapper_name)
         @functools.wraps(func)
         def call(*args,**kwargs):
             add_to_control_list(item)            
@@ -34,7 +34,7 @@ def wrapper_factory_support(item,wrapper_name='wrapper'):
         return call
     return wrapper
 
-# this foo functions is used for testing purposes in test_onlywraponce
+# this foo functions is used for testing purposes in test_wraponlyonce
 @wrapper_factory_support("a")
 def foo():
     pass

@@ -82,7 +82,7 @@ def get_unique_hash_of_function(function, hashfunction = 'sha224'):
 
 
 _wrap_being_used = {}
-def onlywraponce(function,wrapper):
+def wraponlyonce(function,wrapper):
     """
     It makes sure that if 'wrapper' is wrapped around 'function' twice,
     the wrapper is only executed once (the outer wrapper)
@@ -106,7 +106,7 @@ def onlywraponce(function,wrapper):
     (functions do_something and create_hash must be of your own design)  
 
     def wrapper(func):
-        @onlywraponce(func,wrapper)
+        @wraponlyonce(func,wrapper)
         @functools.wraps(func)
         def call(*args,**kwargs):
             return do_something(func,*args,**kwargs)
@@ -117,7 +117,7 @@ def onlywraponce(function,wrapper):
     def wrapper_factory(*f_args,**f_kwargs):
         unique_name = create_hash(wrapper_factory,*f_args,**f_kwargs) 
         def wrapper(func):
-            @onlywraponce(func,unique_name)
+            @wraponlyonce(func,unique_name)
             @functools.wraps(func)
             def call(*args,**kwargs):
                 return do_something(func,*args,**kwargs) 
@@ -131,7 +131,7 @@ def onlywraponce(function,wrapper):
                             %unhashabletype(wrapper)
             raise TypeError(error_message)
 
-    # TODO: rename onlywraponce to wraponlyonce (woo)
+
 
     # preparation for making 'thiskey'
     if callable(wrapper):
@@ -173,5 +173,5 @@ def onlywraponce(function,wrapper):
 
 if __name__ == "__main__":
     import unittest
-    from test.test_onlywraponce import *
+    from test.test_wraponlyonce import *
     unittest.main()
