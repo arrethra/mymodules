@@ -38,29 +38,36 @@ def get_unique_hash_of_function(function, hashfunction = 'sha224'):
     function:     The function/class/method you want to hash
     hashfunction: Default uses 'sha224', but you can provide your own
                   hash_algorithm here (can be a function)
-                  
-    Looking up the sourcelines might take up quite long (1~10ms)
+
+    For most functions, it imprints on (only) module-path and code-line,
+    which should be entirely unique for each defined function/class/..
     """
-    # optimizing a bit for speed
-    try: # if function
-        A0 = function.__code__      
-    except AttributeError:
-        try: # if method
-            A0 = function.__func__.__code
-        except AttributeError: # built-in or class or else
-            try:
-                A0 = inspect.getsourcefile(function)
-            except TypeError: # built-in
-                A3 = function.__name__+"<built-in>"
-            else:
-                # this bit is relatively expensive
-                A1 = inspect.getsourcelines(function)
-                A2 = A1[0] 
-                A3 = A0 +" at line "+str(A1[1]) +"\n" +"".join(A2)
-    else:
+    # optimizing a bit for speed, but also traceback
+    found_A0 = False
+    # if function
+    try:                    A0 = function.__code__      
+    except AttributeError:  pass
+    else:                   found_A0 = False
+
+    if not found_A0:# if method
+        try:                    A0 = function.__func__.__code__        
+        except AttributeError:  pass
+        else:                   found_A0 = False
+
+    if found_A0:
         A1 = str(A0)
-        A2 = A1.split("file")[1:]
+        A2 = A1.split("file")[1:] # finds line at which it is defined
         A3 = "".join(A2).replace(">","")
+    else:
+        if inspect.isbuiltin(function):
+            A3 = function.__name__+"<built-in>"
+        else:
+            A0 = inspect.getsourcefile(function)
+            # this bit is relatively expensive
+            A1 = inspect.getsourcelines(function)
+            A2 = A1[0] 
+            A3 = A0 +" at line "+str(A1[1]) +"\n" +"".join(A2)        
+        
     A4 = bytes(A3.encode())
     # low collision posibility
     if isinstance(hashfunction,str):        
@@ -75,7 +82,7 @@ def get_unique_hash_of_function(function, hashfunction = 'sha224'):
 
 
 _wrap_being_used = {}
-def onlywraponce(function,wrapper,use_function_hash=True):
+def onlywraponce(function,wrapper):
     """
     It makes sure that if 'wrapper' is wrapped around 'function' twice,
     the wrapper is only executed once (the outer wrapper)
@@ -124,14 +131,11 @@ def onlywraponce(function,wrapper,use_function_hash=True):
                             %unhashabletype(wrapper)
             raise TypeError(error_message)
 
-    # TODO: remove use_function_hash
     # TODO: rename onlywraponce to wraponlyonce (woo)
 
     # preparation for making 'thiskey'
     if callable(wrapper):
-        thiswrappername = "<%s> "%wrapper.__name__
-        if use_function_hash:
-            thiswrappername += " with hash=" + \
+        thiswrappername = "<%s> "%wrapper.__name__ + " with hash=" + \
                                str(get_unique_hash_of_function(wrapper))
     else:
         thiswrappername = wrapper

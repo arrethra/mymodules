@@ -40,28 +40,6 @@ def wrapper(func):
         return output
     return call
 
-def dec(func):
-    @owo.onlywraponce(func,dec,use_function_hash=False )
-    @functools.wraps(func)
-    def call(*args,**kwargs):
-        add_to_control_list("dec")            
-        output = func(*args,**kwargs)
-        add_to_control_list("dec")
-        return output
-    return call
-
-def wrapper_factory1(item):
-    def dec(func):
-        @owo.onlywraponce(func,dec,
-                          use_function_hash=False )
-        @functools.wraps(func)
-        def call(*args,**kwargs):
-            add_to_control_list(item)            
-            output = func(*args,**kwargs)
-            add_to_control_list(item)
-            return output
-        return call
-    return dec
 
 
 class Test_onlywraponce(unittest.TestCase):
@@ -121,7 +99,7 @@ class Test_onlywraponce(unittest.TestCase):
         self.assertTrue(CONTROL_LIST == ["a","foo","b","bar","b","foo","a"])
 
     def test_owo_wrappers_with_same_name(self):
-        # wrappers (after creation) have 
+        # wrappers (after creation) have same function-name. However, because 
         @wrapper_factory("a")
         @wrapper
         def foo():
@@ -129,21 +107,8 @@ class Test_onlywraponce(unittest.TestCase):
         foo()
         self.assertTrue(CONTROL_LIST == ["a","wrapper","wrapper","a"])
 
-    def test_owo_use_function_hash_2(self):
-        # example of where it can go wrong
-        # both have use_function_hash=False
 
-        # these are clearly two different wrappers, but
-        # to the computer the names of their created wrappers is the same
-        # and because no hash is used, they cancel each other falsely
-        @wrapper_factory1("a")
-        @dec
-        def foo():
-            pass
-        foo()
-        self.assertTrue(CONTROL_LIST == ["a","a"])
-
-    def test_owo_from_antoher_module(self):
+    def test_owo_from_another_module(self):
         # test if working from between modules still works
         myfoo = towos.foo
         def foo():
@@ -154,6 +119,28 @@ class Test_onlywraponce(unittest.TestCase):
         towos.reset_control_list()
 
     # TODO: test for thread-safety?? (how??)
+
+    def test_get_unique_hash_for_function(self):
+        def custom_function():
+            pass
+        class CustomClass:
+            def custommethod(self):
+                pass
+        MyCustomClass = CustomClass()
+        list_test_functions = [custom_function,
+                               hash, #builtin
+                               CustomClass,
+                               CustomClass.custommethod,
+                               MyCustomClass.custommethod ]
+        hash1 = []
+        hash2 = []
+        for test_function in list_test_functions:            
+            hash1.append( owo.get_unique_hash_of_function(test_function) )
+            hash2.append( owo.get_unique_hash_of_function(test_function) )
+            self.assertTrue( hash1 == hash2 )
+        self.assertTrue(hash1[-2] == hash1[-1]) # methods are the same, regardless whether the class is initiated or not
+        
+        
 
     def tearDown(self):
         reset_control_list()
