@@ -72,7 +72,8 @@ def counter_function(start=1, step=1, elem="default", reset=False, return_keys=F
     Arguments:
     reset:       If this argument is 'True', this resets the counter
                  to 0. If this argument is either an integer or float,
-                 the counter will be reset to that value.
+                 the counter will be reset to that value. Note that
+                 reset will never reset value to start.
     elem:        This function enables multiple counters to be run at
                  the same time, without interfering with each other.
                  The argument 'elem' enables this behavior.
@@ -84,6 +85,10 @@ def counter_function(start=1, step=1, elem="default", reset=False, return_keys=F
                  (This will not be remembered between subsequent calls,
                   so it must be specified each time if it should not be
                   default)
+                  TODO: make it also possible that step can be a
+                        function, which accepts the current value as the
+                        first argument, and calculates the next counter
+                        value (or should I not...?)
     return_keys: If this argument is specified to be True, the names of
                  all counters will be returned (i.e., all the names that
                  elem has been called). This will supersede all other
@@ -94,6 +99,7 @@ def counter_function(start=1, step=1, elem="default", reset=False, return_keys=F
     if return_keys:
         return COUNTER_dict.keys()
 
+    
     if isinstance(reset,bool):
         reset_to_value = 0    
     elif isinstance(reset,(int,float)):
@@ -106,8 +112,17 @@ def counter_function(start=1, step=1, elem="default", reset=False, return_keys=F
                        "was to be found of type %s."%type(reset)
         raise TypeError(error_message)
 
-    if not isinstance(step,(int,float)):
-        error_message = "Argument 'step' should be integer or float, "+\
+    if callable(step):
+        lower_args,higher_args = args_taken_by(step)
+        if not lower_args <= 1 <= higher_args:
+            error_message = "Argument 'step' was found to be callable, "+\
+                            "but has to accept 1 argument. However, function "+\
+                            "accepted between '%s' and '%s' arguments (not "%\
+                            (lower_args,higher_args)  +\
+                            "including arguments that Require a keyword)."
+            raise ValueError(error_message)        
+    elif not isinstance(step,(int,float)):
+        error_message = "Argument 'step' should be integer, float or callable, "+\
                         "but found type %s."%type(step)
         raise TypeError(error_message)
     
@@ -117,7 +132,16 @@ def counter_function(start=1, step=1, elem="default", reset=False, return_keys=F
     elif reset: 
         COUNTER_dict[elem] = reset_to_value
     else:
-        COUNTER_dict[elem] += step
+        if isinstance(step,(float,int)):
+            COUNTER_dict[elem] += step
+        if callable(step):
+            COUNTER_dict[elem] = step(COUNTER_dict[elem])
+            if not isinstance(COUNTER_dict[elem],(float,int)):
+                error_message = "Argument 'step' was found to be function, "+\
+                                "which should return either float or integer,"+\
+                                " but found it returned '%s'."\
+                                %type(COUNTER_dict[elem])
+                raise TypeError(error_message)
     return COUNTER_dict[elem]
 
 
