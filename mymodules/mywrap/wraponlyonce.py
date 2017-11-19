@@ -148,7 +148,11 @@ def wraponlyonce(function,wrapper):
             
             # capture thread-name to ensure thread-safety
             # TODO: thread-safety untested
-            thisthreadname = threading.current_thread().name
+            current_thread = threading.current_thread() 
+            # thought a thread-name would be unique, but no...
+            thisthreadname = current_thread.name +  \
+                                  "[ident=%s]"%current_thread.ident
+
             thiskey = (thiswrappername,thisthreadname)
 
             try:
