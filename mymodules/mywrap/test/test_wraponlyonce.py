@@ -85,8 +85,8 @@ class Test_wraponlyonce(unittest.TestCase):
         foo()
         self.assertTrue(CONTROL_LIST == ["a","foo","bar","foo","a"])
         
-    def test_woo_nested1(self):
-        # these are wraps nested, and do cancel eachother
+    def test_woo_nested2(self):
+        # these are wraps nested, but do NOT cancel eachother, cuz they have been given different names
         @wrapper_factory("a","a")
         def foo():
             add_to_control_list("foo")
@@ -100,6 +100,7 @@ class Test_wraponlyonce(unittest.TestCase):
 
     def test_woo_wrappers_with_same_name(self):
         # wrappers (after creation) have same function-name. However, because 
+        # they both imprint on the function itself, they don't cancel eachother
         @wrapper_factory("a")
         @wrapper
         def foo():

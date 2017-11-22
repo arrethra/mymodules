@@ -101,7 +101,7 @@ DEFAULT = DefaultValues()
 
 _GRID_OPTIONS ={}
 
-WINDOWS_OPEN = []
+WINDOWS_OPEN = [] # TODO: right now, this moldule can't serve two masters I think, so each window in this list needs to be linked with that master....
 
 
 class MessageBox():

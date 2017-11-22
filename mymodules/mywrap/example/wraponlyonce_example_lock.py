@@ -18,7 +18,7 @@ def lockwrapper_woo(lock):
     caused an error.
     """
     def decorator(func):
-        @woo.wraponlyonce(func,id(lock) ) # imprints on the id of the lock
+        @woo.wraponlyonce(func,"lock id = "+ str(id(lock)) ) # imprints on the id of the lock
         @functools.wraps(func)
         def foo(*args,**kwargs):
             lock.acquire()

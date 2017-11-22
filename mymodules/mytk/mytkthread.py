@@ -16,16 +16,20 @@ def _initialize_FUNCTIONS_DICT(master):
 
 def _assert_args_kwargs(args,kwargs):
     if not isinstance(args,tuple):
-        error_message = "Argument 'args' should be a tuple, but instead found type %s."%type(function)
+        error_message = "Argument 'args' should be a tuple, but instead "+\
+                        "found type %s."%type(function)
         return TypeError(error_message)
 
     if not isinstance(kwargs,dict):
-        error_message = "Argument 'kwargs' should be a dictionary, but instead found type %s."%type(function)
+        error_message = "Argument 'kwargs' should be a dictionary, but "+\
+                        "instead found type %s."%type(function)
         return TypeError(error_message)
     else:
         for kwarg_key in kwargs.keys():
             if not isinstance(kwarg_key,str):
-                error_message = "Argument 'kwargs' was to be a dictionary, but not all keys were of type string, as one of them was of type '%s'."%type(kwarg_key)
+                error_message = "Argument 'kwargs' was to be a dictionary, "+\
+                "but not all keys were of type string, as one of them was "+\
+                "of type '%s'."%type(kwarg_key)
                 return ValueError(error_message)
     
     
@@ -40,7 +44,7 @@ def list_function_for_execution(master,
     such a function, and that the GUI in his own thread can execute
     the function (maybe after a slight delay).
     (A GUI itself is not supposed to get calls from different threads,
-    e.g. a tk-window cannot be destroyed from another loop, so that
+    e.g. a tk-window cannot be destroyed from another thread, so that
     other thread has to list the destroy-method)
     
     Arguments:
@@ -59,7 +63,7 @@ def list_function_for_execution(master,
                   can be a list as argument, which has been appended
                   right after the argument has been entered into this
                   function (but the function must wait untill called by
-                  execute_functions.
+                  execute_functions).
     wait_untill_execution:
                   If specified True, the current thread will wait untill
                   that listed function has been executed.
@@ -79,7 +83,8 @@ def list_function_for_execution(master,
         kwargs = copy.deepcopy(kwargs)
         
     if not callable(function):
-        error_message = "Argument 'function' should be callable, but instead found type %s."%type(function)
+        error_message = "Argument 'function' should be callable, but instead "+\
+                        "found type %s."%type(function)
         raise TypeError(error_message)
 
     if wait_untill_execution:
@@ -122,7 +127,8 @@ def execute_functions(master,timer = 0.05):
     _initialize_FUNCTIONS_DICT(master)
 
     if not isinstance(timer,(int,float)):
-        error_message = "Argument timer must be either float or integer, but found type %s."%type(timer)
+        error_message = "Argument timer must be either float or integer, "+\
+                        "but found type %s."%type(timer)
         raise TypeError(error_message)
     elif  timer <0.001:
         error_message = "Argument timer must be 0.001 or greater, but found value '%s'."%timer

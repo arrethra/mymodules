@@ -2,8 +2,8 @@ import threading
 import functools
 import inspect
 import hashlib
-import collections as col
-import time
+## import collections as col
+## import time
 
 def ishashable(item):
     """
@@ -93,20 +93,30 @@ def wraponlyonce(function,wrapper):
     depend on the name of the wrapper. Therefore, all wrappers created
     by the wrapper_factory will be treated as one and the same wrapper.
 
-    NOTE:   If there are multiple wrappers with the same function name
-            (possibly due to different wrapper-factories) the argument
-            use_function_hash prevents one from cancelling eachother.
-            However, looking up that hash is quite slow (1-10ms).
-            use_function_hash only works if argument wrapper is callable    
-       
-    Assumption is that wrapper would execute function under normal
-    circumstances.
+    Arguments:
+    function:  Original function that the wrapper is wrapping. 
+               Sidenote: this will be the function that is executed, if 
+                wraponlyonce notices that the wrapper has already been 
+                used, and therefore will be ignored this time. 
+                Therefore, abuse of this argument is possible. For 
+                example, if you'd like to be notified if the wrapper is
+                being used twice, this argument can point to a second 
+                function that raises that warning
+    wrapper:   The wrapper that is doing the original wrapping. 
+               wraponlyonce imprints on this wrapper. This argument 
+               does not have to be the wrapper, but can also be a 
+               something else on which it can imprint, such as a keyword
+               unique id, that refers to the wrapper. This could be 
+               preferred when working with a  wrapping factory, because
+               all the produced wrappers will generate the same imprint.
+               Note: If this argument is not callable, it must be 
+                hashable.
 
-    This wrapper is used as follows:
-    (functions do_something and create_hash must be of your own design)  
+    Examples on how to use wraponlyonce:
+    ('do_something' and 'create_unique_name' must be of your own design)  
 
     def wrapper(func):
-        @wraponlyonce(func,wrapper)
+        @wraponlyonce(func, wrapper)
         @functools.wraps(func)
         def call(*args,**kwargs):
             return do_something(func,*args,**kwargs)
@@ -115,9 +125,9 @@ def wraponlyonce(function,wrapper):
     Or in a wrapper_factory as
     
     def wrapper_factory(*f_args,**f_kwargs):
-        unique_name = create_hash(wrapper_factory,*f_args,**f_kwargs) 
+        unique_name = create_unique_name(wrapper,*f_args,**f_kwargs) 
         def wrapper(func):
-            @wraponlyonce(func,unique_name)
+            @wraponlyonce(func, unique_name)
             @functools.wraps(func)
             def call(*args,**kwargs):
                 return do_something(func,*args,**kwargs) 
@@ -130,7 +140,6 @@ def wraponlyonce(function,wrapper):
                             "hashable, but contained an unhashable type '%s'."\
                             %unhashabletype(wrapper)
             raise TypeError(error_message)
-
 
 
     # preparation for making 'thiskey'
