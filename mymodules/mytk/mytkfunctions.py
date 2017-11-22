@@ -91,6 +91,32 @@ def InvisibleMasterWrapper(func):
     return decorator
 
 
+def get_parent(widget):
+    """
+    Returns the parent for given widget.
+    If the widget is already the root, it returns itself.
+    """
+    parent_id = widget.winfo_parent()
+    parent = widget._nametowidget(parent_id)
+    return parent
+
+
+def get_root(widget):
+    """
+    Returns the root for given widget.
+    If the widget is already the root, it returns itself.
+    """
+    parent = widget
+    while not parent == get_parent(parent):
+        parent = get_parent(parent)
+    return parent
+    
+
+
+
+
+
+
 if __name__ == "__main__":
     import unittest
     from test.test_mytkfunctions import *

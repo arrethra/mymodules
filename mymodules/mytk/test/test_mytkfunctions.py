@@ -53,7 +53,26 @@ class TestMyTKFunctions(unittest.TestCase):
         self.master.destroy()
         self.assertFalse( mytkf.is_root_alive(self.master) )
 
+    def test_get_parent(self):
+        self.master =  mytkf.MakeInvisibleMaster()
+        widget = tk.Toplevel(self.master)
+        self.assertTrue(self.master ==  mytkf.get_parent(widget))
+        self.master2 = mytkf.MakeInvisibleMaster()
+        widget2 = tk.Toplevel(self.master2)
+        self.assertTrue(self.master2 ==  mytkf.get_parent(widget2))
+        self.assertTrue(self.master ==  mytkf.get_parent(widget))        
+        self.assertTrue(self.master == mytkf.get_parent(self.master) )
+        self.master2.destroy()
+        delattr(self,'master2')
 
+    def test_get_root(self):
+        self.master = mytkf.MakeInvisibleMaster()
+        toplevels  = [tk.Toplevel(self.master)]
+        for i in range(0,3):
+            toplevels += [tk.Toplevel(toplevels[-1])]
+        root = mytkf.get_root(toplevels[-1])
+        self.assertTrue(self.master == root )
+        self.assertTrue(self.master == mytkf.get_root(self.master) )
         
     def setUp(self):
         self.assertFalse(mytkf.is_root_present()) # if this line fails, error might be somewhere else
